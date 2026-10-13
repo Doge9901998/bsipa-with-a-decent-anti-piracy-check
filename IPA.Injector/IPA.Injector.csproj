@@ -1,0 +1,74 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\Common.props" />
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <RootNamespace>IPA.Injector</RootNamespace>
+
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <BuildForBeatSaber Condition="'$(BuildForBeatSaber)' == ''">true</BuildForBeatSaber>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(BuildForBeatSaber)' == 'true'">
+    <DefineConstants>$(DefineConstants);BeatSaber</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\IPA.Loader\IPA.Loader.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>..\Refs\UnityEngine.CoreModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\Libs\Microsoft.CSharp.dll">
+      <Link>Libraries\Mono\Microsoft.CSharp.dll</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Libs\netstandard.dll">
+      <Link>Libraries\Mono\netstandard.dll</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Mono.Cecil" Version="0.11.6" />
+
+    <ProjectReference Include="..\SemVer\SemVer.csproj" />
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Message Text="Copying documentation" Importance="high" />
+    <ItemGroup>
+      <XmlFiles Include="%(ReferenceCopyLocalPaths.RelativeDir)%(ReferenceCopyLocalPaths.Filename).xml" Condition="Exists('%(ReferenceCopyLocalPaths.RelativeDir)%(ReferenceCopyLocalPaths.Filename).xml')" />
+    </ItemGroup>
+    <Copy SourceFiles="@(XmlFiles)" DestinationFolder="$(OutputPath)" />
+
+    <Message Text="Relocating" Importance="normal" />
+    <ItemGroup>
+      <SystemFiles Include="$(OutputPath)IPA.Injector.*" />
+      <SystemFiles Include="$(OutputPath)IPA.Loader.*" />
+      <OldLibFiles Include="$(OutputPath)Libs\**\*" />
+    </ItemGroup>
+    <Move SourceFiles="@(SystemFiles)" DestinationFolder="$(OutputPath)Data\Managed" />
+
+    <Delete Files="@(OldLibFiles)" />
+    <RemoveDir Directories="$(OutputPath)Libs" />
+    <ItemGroup>
+      <LibFiles Include="$(OutputPath)**\*" Exclude="$(OutputPath)Data\**\*;$(OutputPath)Libs\**\*" />
+    </ItemGroup>
+    <Move SourceFiles="@(LibFiles)" DestinationFolder="$(OutputPath)Libs\" />
+    <RemoveDir Directories="$(OutputPath)Libraries\Included" />
+    <RemoveDir Directories="$(OutputPath)Libraries" />
+  </Target>
+
+  <Import Project="..\Common.targets" />
+
+</Project>

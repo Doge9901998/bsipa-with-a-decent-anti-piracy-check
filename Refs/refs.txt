@@ -1,0 +1,12 @@
+::from ./bsinstalldir.txt
+"Beat Saber_Data/
+""Managed/
+"""UnityEngine.
+""""dll?alias=UnityEngine.dll
+""""xml?alias=UnityEngine.xml?optional
+""""UnityWebRequestModule.
+"""""dll?alias=UnityEngine.UnityWebRequestModule.dll
+"""""xml?alias=UnityEngine.UnityWebRequestModule.xml?optional
+""""CoreModule.
+"""""dll?alias=UnityEngine.CoreModule.dll
+"""""xml?alias=UnityEngine.CoreModule.xml?optional

@@ -1,0 +1,3 @@
+---
+uid: other.index
+---
