@@ -12,14 +12,14 @@ namespace IPA.Injector
         // GET BACK TO WORK CODE SLAVE -karma
         // no -doge
         private const uint STEAM_APP_ID = 620980;
-        private const ulong META_APP_ID = 0;        // 0 to skip oculus check for now cuz i am NOT doing SHIT for meta's dumb sdk -doge
+        // 0 to skip oculus check for now cuz i am NOT doing SHIT for meta's dumb sdk -doge
+        private const ulong META_APP_ID = 0;
 
         public static bool IsInvalid(string path)
         {
             // shit ass code ngl -karma
             // I KNOW -doge
 
-            
             // steam check first cause valve made it SO FUCKIN EASY THANK YOU VALVE -doge
             if (TrySteamOwnership(path, out bool owned))
             {
@@ -44,22 +44,32 @@ namespace IPA.Injector
         private static bool TrySteamOwnership(string gamePath, out bool isOwned)
         {
             isOwned = false;
+            string appIdFile = null;
 
             try
             {
-
                 // if this fix doesn't work i am bouta kill doge -karma
                 // fuck i do to you gng? -doge
+                appIdFile = Path.Combine(gamePath, "steam_appid.txt");
+                bool createdAppIdFile = false;
+                if (!File.Exists(appIdFile))
+                {
+                    File.WriteAllText(appIdFile, STEAM_APP_ID.ToString());
+                    createdAppIdFile = true;
+                }
+
                 string dll64 = Path.Combine(gamePath, "steam_api64.dll");
                 string dll32 = Path.Combine(gamePath, "steam_api.dll");
 
                 IntPtr handle = IntPtr.Zero;
                 // try steam and if it breaks i am blaming you karma -doge
                 // tf did i do? -karma
-                if (File.Exists(dll64)) {
+                if (File.Exists(dll64))
+                {
                     handle = LoadLibrary(dll64);
                 }
-                else if (File.Exists(dll32)) {
+                else if (File.Exists(dll32))
+                {
                     // I LOVE ANTI-PIRACY -doge
                     handle = LoadLibrary(dll32);
                 }
@@ -69,13 +79,15 @@ namespace IPA.Injector
                     // didn't yo girl not want to pop a titty for you? -doge
                     // TOO FAR BRO -karma
                     handle = LoadLibrary("steam_api64.dll");
-                    if (handle == IntPtr.Zero) {
-                        handle = LoadLibrary("steam_api.dll"); 
+                    if (handle == IntPtr.Zero)
+                    {
+                        handle = LoadLibrary("steam_api.dll");
                     }
                 }
 
                 if (handle == IntPtr.Zero)
                     return false; // if some shithead doesn't have steam i'm finna kms -doge
+
                 // do more steam shit -doge
                 IntPtr initPtr = GetProcAddress(handle, "SteamAPI_Init");
                 if (initPtr == IntPtr.Zero)
@@ -91,10 +103,12 @@ namespace IPA.Injector
                 // valve loves changing shit -doge
                 // i hate how shit my code is -doge
                 IntPtr getAppsPtr = GetProcAddress(handle, "SteamAPI_SteamApps_v008");
-                if (getAppsPtr == IntPtr.Zero) {
+                if (getAppsPtr == IntPtr.Zero)
+                {
                     getAppsPtr = GetProcAddress(handle, "SteamAPI_SteamApps_v007");
                 }
-                if (getAppsPtr == IntPtr.Zero) {
+                if (getAppsPtr == IntPtr.Zero)
+                {
                     getAppsPtr = GetProcAddress(handle, "SteamAPI_SteamApps_v006"); // fallback js in case -karma
                 }
 
@@ -111,13 +125,27 @@ namespace IPA.Injector
                 var isSubscribed = Marshal.GetDelegateForFunctionPointer<SteamAPI_BIsSubscribedAppDelegate>(subscribedPtr);
                 // WE FINALLY ACTUALLY CHECK OWNERSHIP! (i hate myself) -doge 
                 isOwned = isSubscribed(apps, STEAM_APP_ID);
-                return true; 
+                return true;
             }
             catch (Exception)
             {
                 // maybe log this exception properly instead of swallowing it for debugging shit easier -doge
                 // no go fuck yourself -karma
                 return false;
+            }
+            finally
+            {
+                try
+                {
+                    if (appIdFile != null && File.Exists(appIdFile))
+                    {
+                        // BSMANAGER PATCH MAYBE??????? -doge
+                        string content = File.ReadAllText(appIdFile).Trim();
+                        if (content == STEAM_APP_ID.ToString())
+                            File.Delete(appIdFile);
+                    }
+                }
+                catch { /* ignore cleanup failures */ }
             }
         }
 
