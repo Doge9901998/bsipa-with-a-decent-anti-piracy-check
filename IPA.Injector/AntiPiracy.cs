@@ -20,15 +20,22 @@ namespace IPA.Injector
             // shit ass code ngl -karma
             // I KNOW -doge
 
+            Console.WriteLine($"[AntiPiracy] path = {path}");
+            Console.WriteLine($"[AntiPiracy] CurrentDirectory = {Environment.CurrentDirectory}");
+
             // steam check first cause valve made it SO FUCKIN EASY THANK YOU VALVE -doge
             if (TrySteamOwnership(path, out bool owned))
             {
+                Console.WriteLine($"[AntiPiracy] Steam ownership result: owned={owned}");
                 return !owned;
             }
+
+            Console.WriteLine("[AntiPiracy] Steam check failed / unavailable, trying Meta...");
 
             // then meta/oculus which does ABSOLUTLY NOTHING CAUSE META IS RETARDED -doge
             if (IsLaunchedByMeta())
             {
+                Console.WriteLine("[AntiPiracy] Meta launch detected → allowing");
                 return false;
             }
 
@@ -38,6 +45,7 @@ namespace IPA.Injector
             // fuck off -doge
             // TODO: maybe show a message box yelling at the idiot for pirating -doge
             
+            Console.WriteLine("[AntiPiracy] No ownership proof → INVALID");
             return true;
         }
 
@@ -51,11 +59,14 @@ namespace IPA.Injector
                 // if this fix doesn't work i am bouta kill doge -karma
                 // fuck i do to you gng? -doge
                 appIdFile = Path.Combine(gamePath, "steam_appid.txt");
-                bool createdAppIdFile = false;
                 if (!File.Exists(appIdFile))
                 {
                     File.WriteAllText(appIdFile, STEAM_APP_ID.ToString());
-                    createdAppIdFile = true;
+                    Console.WriteLine("[AntiPiracy] Created temporary steam_appid.txt");
+                }
+                else
+                {
+                    Console.WriteLine($"[AntiPiracy] steam_appid.txt already exists: {File.ReadAllText(appIdFile).Trim()}");
                 }
 
                 string dll64 = Path.Combine(gamePath, "steam_api64.dll");
@@ -66,11 +77,13 @@ namespace IPA.Injector
                 // tf did i do? -karma
                 if (File.Exists(dll64))
                 {
+                    Console.WriteLine($"[AntiPiracy] Loading {dll64}");
                     handle = LoadLibrary(dll64);
                 }
                 else if (File.Exists(dll32))
                 {
                     // I LOVE ANTI-PIRACY -doge
+                    Console.WriteLine($"[AntiPiracy] Loading {dll32}");
                     handle = LoadLibrary(dll32);
                 }
                 else
@@ -78,59 +91,79 @@ namespace IPA.Injector
                     // (insert man shooting basketball from moon here) ahhh code -karma
                     // didn't yo girl not want to pop a titty for you? -doge
                     // TOO FAR BRO -karma
+                    Console.WriteLine("[AntiPiracy] DLL not found in game dir, trying LoadLibrary by name");
                     handle = LoadLibrary("steam_api64.dll");
                     if (handle == IntPtr.Zero)
-                    {
                         handle = LoadLibrary("steam_api.dll");
-                    }
                 }
 
                 if (handle == IntPtr.Zero)
+                {
+                    Console.WriteLine("[AntiPiracy] LoadLibrary failed");
                     return false; // if some shithead doesn't have steam i'm finna kms -doge
+                }
+
+                Console.WriteLine("[AntiPiracy] DLL loaded successfully");
 
                 // do more steam shit -doge
                 IntPtr initPtr = GetProcAddress(handle, "SteamAPI_Init");
                 if (initPtr == IntPtr.Zero)
+                {
+                    Console.WriteLine("[AntiPiracy] SteamAPI_Init not found");
                     return false;
+                }
 
                 var init = Marshal.GetDelegateForFunctionPointer<SteamAPI_InitDelegate>(initPtr);
                 // need to fix offlime mode issue -doge
                 // "offlime" :skull: -karma
                 // go eat your girl's ass karma -doge
-                if (!init())
+                bool initResult = init();
+                Console.WriteLine($"[AntiPiracy] SteamAPI_Init() = {initResult}");
+                if (!initResult)
                     return false;
 
                 // valve loves changing shit -doge
                 // i hate how shit my code is -doge
                 IntPtr getAppsPtr = GetProcAddress(handle, "SteamAPI_SteamApps_v008");
                 if (getAppsPtr == IntPtr.Zero)
-                {
                     getAppsPtr = GetProcAddress(handle, "SteamAPI_SteamApps_v007");
-                }
                 if (getAppsPtr == IntPtr.Zero)
-                {
                     getAppsPtr = GetProcAddress(handle, "SteamAPI_SteamApps_v006"); // fallback js in case -karma
-                }
 
                 if (getAppsPtr == IntPtr.Zero)
+                {
+                    Console.WriteLine("[AntiPiracy] Could not find SteamApps interface (tried v008/v007/v006)");
                     return false;
+                }
+
+                Console.WriteLine("[AntiPiracy] Got SteamApps interface");
 
                 var getApps = Marshal.GetDelegateForFunctionPointer<SteamAPI_GetSteamAppsDelegate>(getAppsPtr);
                 IntPtr apps = getApps();
+                if (apps == IntPtr.Zero)
+                {
+                    Console.WriteLine("[AntiPiracy] SteamApps instance is null");
+                    return false;
+                }
 
                 IntPtr subscribedPtr = GetProcAddress(handle, "SteamAPI_ISteamApps_BIsSubscribedApp");
                 if (subscribedPtr == IntPtr.Zero)
+                {
+                    Console.WriteLine("[AntiPiracy] BIsSubscribedApp not found");
                     return false;
+                }
 
                 var isSubscribed = Marshal.GetDelegateForFunctionPointer<SteamAPI_BIsSubscribedAppDelegate>(subscribedPtr);
                 // WE FINALLY ACTUALLY CHECK OWNERSHIP! (i hate myself) -doge 
                 isOwned = isSubscribed(apps, STEAM_APP_ID);
+                Console.WriteLine($"[AntiPiracy] BIsSubscribedApp({STEAM_APP_ID}) = {isOwned}");
                 return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 // maybe log this exception properly instead of swallowing it for debugging shit easier -doge
                 // no go fuck yourself -karma
+                Console.WriteLine($"[AntiPiracy] EXCEPTION: {ex}");
                 return false;
             }
             finally
@@ -142,7 +175,10 @@ namespace IPA.Injector
                         // BSMANAGER PATCH MAYBE??????? -doge
                         string content = File.ReadAllText(appIdFile).Trim();
                         if (content == STEAM_APP_ID.ToString())
+                        {
                             File.Delete(appIdFile);
+                            Console.WriteLine("[AntiPiracy] Cleaned up temporary steam_appid.txt");
+                        }
                     }
                 }
                 catch { /* ignore cleanup failures */ }
