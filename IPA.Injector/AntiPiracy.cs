@@ -69,29 +69,45 @@ namespace IPA.Injector
                     Console.WriteLine($"[AntiPiracy] steam_appid.txt already exists: {File.ReadAllText(appIdFile).Trim()}");
                 }
 
-                string dll64 = Path.Combine(gamePath, "steam_api64.dll");
-                string dll32 = Path.Combine(gamePath, "steam_api.dll");
+                // ONE LITTLE PIGEON SITTIN IN A TREEEEE -karma
+                // shut the FUCK UP ABOUT THAT -doge
+                string[] searchPaths = new[]
+                {
+                    Path.Combine(gamePath, "steam_api64.dll"),
+                    Path.Combine(gamePath, "steam_api.dll"),
+                    Path.Combine(gamePath, "Beat Saber_Data", "Plugins", "steam_api64.dll"),
+                    Path.Combine(gamePath, "Beat Saber_Data", "Plugins", "x86_64", "steam_api64.dll"),
+                    Path.Combine(gamePath, "Beat Saber_Data", "Plugins", "steam_api.dll"),
+                    Path.Combine(gamePath, "Plugins", "steam_api64.dll"),
+                    Path.Combine(gamePath, "Plugins", "x86_64", "steam_api64.dll"),
+                };
 
                 IntPtr handle = IntPtr.Zero;
-                // try steam and if it breaks i am blaming you karma -doge
-                // tf did i do? -karma
-                if (File.Exists(dll64))
+                string loadedFrom = null;
+
+                foreach (var candidate in searchPaths)
                 {
-                    Console.WriteLine($"[AntiPiracy] Loading {dll64}");
-                    handle = LoadLibrary(dll64);
+                    Console.WriteLine($"[AntiPiracy] Looking for DLL at: {candidate}");
+                    if (File.Exists(candidate))
+                    {
+                        handle = LoadLibrary(candidate);
+                        if (handle != IntPtr.Zero)
+                        {
+                            loadedFrom = candidate;
+                            Console.WriteLine($"[AntiPiracy] Successfully loaded from: {candidate}");
+                            break;
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[AntiPiracy] File exists but LoadLibrary failed: {candidate}");
+                        }
+                    }
                 }
-                else if (File.Exists(dll32))
+
+                // deep check cause bs files is a bitch -doge
+                if (handle == IntPtr.Zero)
                 {
-                    // I LOVE ANTI-PIRACY -doge
-                    Console.WriteLine($"[AntiPiracy] Loading {dll32}");
-                    handle = LoadLibrary(dll32);
-                }
-                else
-                {
-                    // (insert man shooting basketball from moon here) ahhh code -karma
-                    // didn't yo girl not want to pop a titty for you? -doge
-                    // TOO FAR BRO -karma
-                    Console.WriteLine("[AntiPiracy] DLL not found in game dir, trying LoadLibrary by name");
+                    Console.WriteLine("[AntiPiracy] Falling back to LoadLibrary by name only");
                     handle = LoadLibrary("steam_api64.dll");
                     if (handle == IntPtr.Zero)
                         handle = LoadLibrary("steam_api.dll");
@@ -99,11 +115,11 @@ namespace IPA.Injector
 
                 if (handle == IntPtr.Zero)
                 {
-                    Console.WriteLine("[AntiPiracy] LoadLibrary failed");
+                    Console.WriteLine("[AntiPiracy] LoadLibrary failed everywhere");
                     return false; // if some shithead doesn't have steam i'm finna kms -doge
                 }
 
-                Console.WriteLine("[AntiPiracy] DLL loaded successfully");
+                Console.WriteLine($"[AntiPiracy] DLL loaded successfully {(loadedFrom != null ? "from " + loadedFrom : "via name")}");
 
                 // do more steam shit -doge
                 IntPtr initPtr = GetProcAddress(handle, "SteamAPI_Init");
