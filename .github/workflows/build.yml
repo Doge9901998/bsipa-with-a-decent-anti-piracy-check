@@ -8,6 +8,7 @@ on:
       - "v*"
   pull_request:
     branches:
+      - main
       - master
 
 defaults:
@@ -36,7 +37,7 @@ jobs:
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "6.0.100" # since we now use this
+          dotnet-version: "6.0.100"
       - name: Log in to package source
         shell: pwsh
         run: |
@@ -57,7 +58,7 @@ jobs:
   release:
     name: Publish release
     needs: build
-    if: true
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
       contents: write
