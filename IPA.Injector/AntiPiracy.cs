@@ -20,13 +20,13 @@ namespace IPA.Injector
             // shit ass code ngl -karma
             // I KNOW -doge
 
-            Console.WriteLine($"[AntiPiracy] path = {path}");
-            Console.WriteLine($"[AntiPiracy] CurrentDirectory = {Environment.CurrentDirectory}");
-
+            // for legal stuff i added this note -doge
+            Console.WriteLine("{IPA Modified} THIS IPA VERSION WAS MODIFIED BY DOGE AND KARMA");
+            Console.WriteLine("{IPA Modified} made with love :)");
+            
             // steam check first cause valve made it SO FUCKIN EASY THANK YOU VALVE -doge
             if (TrySteamOwnership(path, out bool owned))
             {
-                Console.WriteLine($"[AntiPiracy] Steam ownership result: owned={owned}");
                 return !owned;
             }
 
@@ -35,7 +35,6 @@ namespace IPA.Injector
             // then meta/oculus which does ABSOLUTLY NOTHING CAUSE META IS RETARDED -doge
             if (IsLaunchedByMeta())
             {
-                Console.WriteLine("[AntiPiracy] Meta launch detected → allowing");
                 return false;
             }
 
@@ -45,7 +44,7 @@ namespace IPA.Injector
             // fuck off -doge
             // TODO: maybe show a message box yelling at the idiot for pirating -doge
             
-            Console.WriteLine("[AntiPiracy] No ownership proof → INVALID");
+            Console.WriteLine("[AntiPiracy] WE DO NOT TOLERATE PIRACY");
             return true;
         }
 
@@ -62,12 +61,8 @@ namespace IPA.Injector
                 if (!File.Exists(appIdFile))
                 {
                     File.WriteAllText(appIdFile, STEAM_APP_ID.ToString());
-                    Console.WriteLine("[AntiPiracy] Created temporary steam_appid.txt");
                 }
-                else
-                {
-                    Console.WriteLine($"[AntiPiracy] steam_appid.txt already exists: {File.ReadAllText(appIdFile).Trim()}");
-                }
+
 
                 // ONE LITTLE PIGEON SITTIN IN A TREEEEE -karma
                 // shut the FUCK UP ABOUT THAT -doge
